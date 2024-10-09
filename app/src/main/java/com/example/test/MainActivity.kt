@@ -17,12 +17,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import com.example.test.screens.MapScreen
+import com.example.test.utils.ManifestUtils
+import com.example.test.viewmodel.MapViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
+import com.google.android.libraries.places.api.Places
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -38,10 +41,18 @@ import java.util.Properties
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Retrieve the API key from the manifest file
+        val apiKey = ManifestUtils.getApiKeyFromManifest(this)
+        // Initialize the Places API with the retrieved API key
+        if (!Places.isInitialized() && apiKey != null) {
+            Places.initialize(applicationContext, apiKey)
+        }
+
         enableEdgeToEdge()
         setContent {
-                //Calling MapScreen fun that we just created!
-                MapScreen()
+                val mapViewModel = MapViewModel()
+                MapScreen(mapViewModel)
         }
 
 
