@@ -1,59 +1,42 @@
 package com.example.gpskafkaapp
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Bundle
-import android.view.Surface
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.core.app.ActivityCompat
+import com.example.test.screens.LoginScreen
 import com.example.test.screens.MapScreen
-import com.example.test.utils.ManifestUtils
 import com.example.test.viewmodel.MapViewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.libraries.places.api.Places
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.clients.producer.ProducerRecord
-import java.util.Properties
+import java.util.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Retrieve the API key from the manifest file
-        val apiKey = ManifestUtils.getApiKeyFromManifest(this)
-        // Initialize the Places API with the retrieved API key
-        if (!Places.isInitialized() && apiKey != null) {
-            Places.initialize(applicationContext, apiKey)
-        }
-
         enableEdgeToEdge()
         setContent {
+            var isLoggedIn by remember { mutableStateOf(false) }
+
+            if (isLoggedIn) {
                 val mapViewModel = MapViewModel()
                 MapScreen(mapViewModel)
+            } else {
+                LoginScreen(onLoginSuccess = { isLoggedIn = true })
+            }
         }
+    }
 
 
 //    private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -129,37 +112,37 @@ class MainActivity : ComponentActivity() {
 //        props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = "org.apache.kafka.common.serialization.StringSerializer"
 //        return KafkaProducer(props)
 //    }
-}
 
-@Composable
-fun MyMapApp(latLng: LatLng) {
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(latLng, 10f)
-    }
+    @Composable
+    fun MyMapApp(latLng: LatLng) {
+        val cameraPositionState = rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(latLng, 10f)
+        }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        GoogleMap(
-            cameraPositionState = cameraPositionState
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
         ) {
-            Marker(
-                state = MarkerState(position = latLng),
-                title = "User's current location"
-            )
+            GoogleMap(
+                cameraPositionState = cameraPositionState
+            ) {
+                Marker(
+                    state = MarkerState(position = latLng),
+                    title = "User's current location"
+                )
+            }
         }
     }
+
+    private fun createKafkaProducer(): KafkaProducer<String, String> {
+        val props = Properties()
+        // Use your Heroku Kafka broker URL
+        props[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = "your-heroku-kafka-broker-url:9092"
+
+        // Kafka producer settings
+        props[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = "org.apache.kafka.common.serialization.StringSerializer"
+        props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = "org.apache.kafka.common.serialization.StringSerializer"
+
+        return KafkaProducer(props)
+    }
 }
-
-private fun createKafkaProducer(): KafkaProducer<String, String> {
-    val props = Properties()
-    // Use your Heroku Kafka broker URL
-    props[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = "your-heroku-kafka-broker-url:9092"
-
-    // Kafka producer settings
-    props[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = "org.apache.kafka.common.serialization.StringSerializer"
-    props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = "org.apache.kafka.common.serialization.StringSerializer"
-
-    return KafkaProducer(props)
-}}
