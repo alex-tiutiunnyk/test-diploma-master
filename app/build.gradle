@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.gpskafkaapp'
+    namespace 'com.example.saferoad'
 
     compileSdk 35
     defaultConfig {
-        applicationId "com.example.gpskafkaapp"
+        applicationId "com.example.saferoad"
         minSdk 27
         targetSdk 35
         versionCode 1
