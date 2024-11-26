@@ -1,49 +1,72 @@
-package com.example.gpskafkaapp
+package com.example.saferoad
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Bundle
-import android.view.Surface
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.core.app.ActivityCompat
-import com.example.test.screens.MapScreen
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import androidx.compose.ui.graphics.Color
+import com.example.saferoad.components.MyTopAppBar
+import com.example.saferoad.navigation.AppRouter
+import com.example.saferoad.navigation.Screen
+import com.example.saferoad.screens.LoginScreen
+import com.example.saferoad.screens.SignUpScreen
+import com.example.saferoad.ui.theme.SafeRoadTheme
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.clients.producer.ProducerRecord
-import java.util.Properties
+import java.util.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-                //Calling MapScreen fun that we just created!
-                MapScreen()
+            SafeRoadTheme {
+                SafeRoadApp()
+            }
         }
+    }
 
+    @Composable
+    fun SafeRoadApp() {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color.White
+        ) {
+            Scaffold(
+                topBar = {
+                    MyTopAppBar()
+                }) {
+                Crossfade(targetState = AppRouter.currentScreen) { currentState ->
+                    when (currentState.value) {
+                        is Screen.SignUpScreen -> {
+                            SignUpScreen()
+                        }
+
+                        is Screen.LoginScreen -> {
+                            LoginScreen()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    ////
+
+
+}
 
 //    private lateinit var fusedLocationClient: FusedLocationProviderClient
 //    val currentLocation = LatLng(location.latitude, location.longitude)
@@ -118,7 +141,6 @@ class MainActivity : ComponentActivity() {
 //        props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = "org.apache.kafka.common.serialization.StringSerializer"
 //        return KafkaProducer(props)
 //    }
-}
 
 @Composable
 fun MyMapApp(latLng: LatLng) {
@@ -151,4 +173,4 @@ private fun createKafkaProducer(): KafkaProducer<String, String> {
     props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = "org.apache.kafka.common.serialization.StringSerializer"
 
     return KafkaProducer(props)
-}}
+}
